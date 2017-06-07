@@ -75,7 +75,7 @@ for i = 1:tem_r
             max_c = max(max_c, tem_c);
             min_c = min(min_c, tem_c);
         end
-        endgit
+    end
 end
 
 % scale invariant
