@@ -1,0 +1,8 @@
+function [ I ] = imageSegmentation( I )
+
+size
+% make Image grayscale
+
+
+
+end

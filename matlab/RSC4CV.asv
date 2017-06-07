@@ -1,0 +1,121 @@
+%% initial - clear
+
+clc; clear; close all; imtool close all;
+
+%% initial - image load
+
+img_extension = '*.bmp;*.cur;*.gif;*.hdf;*.ico;*.jpeg;*.jpg;*.pbm;*.pcx;*.pgm;*.png;*.pnm;*.ras;*.tif;*.tiff;*.xwd';
+
+[filename, pathname, filterindex] = uigetfile({img_extension, 'All Readable Files'}, 'select voting board');
+
+if isnumeric(filename)
+    'here'
+    return;
+end
+
+img = imread(strcat(pathname, filename));
+
+%% initial - select region
+
+imshow(img);
+h = impoly;
+position = wait(h);
+boundbox = [min(position(:,1)), min(position(:,2)), max(position(:,1))-min(position(:,1)), max(position(:,2))-min(position(:,2))];
+BW = createMask(h);
+img = imcrop(uint8(BW).*img, boundbox);
+
+imshow(img);
+h = impoly;
+position = wait(h);
+boundbox = [min(position(:,1)), min(position(:,2)), max(position(:,1))-min(position(:,1)), max(position(:,2))-min(position(:,2))];
+BW = createMask(h);
+template = imcrop(uint8(BW).*img, boundbox);
+
+imshowpair(img, template, 'montage');
+
+%% process - template background vanishing part
+%
+%
+% 
+% 
+% 
+% 
+%% process - gaussian filtering
+
+sigma = 3;
+img2 = img;
+img = rgb2gray(img);
+template = rgb2gray(template);
+img = double(img) / 255;
+template = double(template) / 255;
+img = imgaussfilt(img, sigma);
+template = imgaussfilt(template, sigma);
+img = double(edge(img, 'Canny'));
+template = double(edge(template, 'Canny'));
+
+imshowpair(img, template, 'montage');
+
+%% process - template matching
+
+% resizing
+sizeparam = 0.4;
+img = imresize(img, sizeparam);
+[n, m] = size(img);
+omg = zeros(n, m);
+[tem_r, tem_c] = size(template);
+
+% scale invariant
+for j = 0.2:0.1:2
+    scale = imresize(template, sizeparam * j);
+    [r, c] = size(template);
+    for i = 0:15:360
+        rot = imrotate(scale, i, 'nearest', 'crop');
+        corr = xcorr2(img, rot);
+        out = max(out, corr(round(r/2): round(n+r/2-1), round(c/2): round(m+c/2-1)));
+    end
+    out = max(out, imresize(out, 1 / j));
+end
+
+out = out ./ max(out(:));
+
+
+
+template = imresize(template, sizeparam);
+[n, m] = size(img);
+[r, c] = size(template);
+
+corr = xcorr2(img, template);
+out = corr(r/2:n+r/2-1,c/2:m+c/2-1);
+
+% rotate invariant
+for i = 0:15:360
+    rot = imrotate(template,i,'nearest','crop');
+    corr = xcorr2(img, rot);
+    out = max(out, corr(round(r/2): round(n+r/2-1), round(c/2): round(m+c/2-1)));
+end
+out = out ./ max(out(:));
+[out_r, out_c] = size(out);
+
+windowsize = round(min(size(template))/2);
+for i = 1:out_r
+    for j = 1:out_c
+        left = max(i-windowsize, 1);
+        right = min(i+windowsize, out_r);
+        top = max(j-windowsize, 1);
+        bottom = min(j+windowsize, out_c);
+        if out(i,j) ~= max(max(out(left:right,top:bottom)))
+            out(i,j) = 0;
+        end
+    end
+end
+
+imshow(img2);
+hold on;
+for i =1:out_r
+    for j=1:out_c
+        if (out(i,j) > 0.7) 
+            plot(j / sizeparam,i / sizeparam,'g.','MarkerSize', 5);
+            viscircles([j / sizeparam, i / sizeparam],(r2+c2) / 4, 'Color', 'b');
+        end
+    end
+end

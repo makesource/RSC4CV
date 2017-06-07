@@ -1,5 +1,4 @@
 clc;
-clear;
 close all;
 imtool close all;
 
@@ -15,23 +14,30 @@ boundbox = [min(position(:,1)), ....
       max(position(:,2))-min(position(:,2))];
 BW = createMask(h);
 img = imcrop(uint8(BW).*img, boundbox);
+imshow(img)
+
 img2 = img;
 img = rgb2gray(img);
-I = imadjust(img);
-imshow(I);
-
 template = rgb2gray(template);
 img = double(img) / 255;
 template = double(template) / 255;
-img = imgaussfilt(img, 3);
-template = imgaussfilt(template, 3);
-imshow(img);
-img = double(edge(img, 'Canny'));
-template = double(edge(template, 'Canny'));
+
+img = double(edge(img, 'Sobel'));
+template = double(edge(template, 'Sobel'));
 imshow(img);
 figure;
 imshow(template);
-[r2, c2] = size(template);
+% 
+% sigma     = 2;
+% threshold = 0.1;
+% [Im, Io, Ix, Iy] = myEdgeFilter(img, sigma);
+% img = double(Im > threshold);
+% imshow(Im > threshold);
+% [Im, Io, Ix, Iy] = myEdgeFilter(template, sigma);
+% template = double(Im > threshold);
+% figure;
+% imshow(Im > threshold);
+
 img = imresize(img, 0.4);
 template = imresize(template, 0.4);
 
@@ -68,9 +74,9 @@ imshow(img2);
 hold on;
 for i =1:out_r
     for j=1:out_c
-        if (out(i,j) > 0.5) 
+        if (out(i,j) > 0.7) 
             plot(j / 0.4,i / 0.4,'g.','MarkerSize', 5);
-            viscircles([j/0.4 i/0.4],(r2+c2)/4,'Color','b');
+            viscircles([j/0.4 i/0.4],(r+c)/4,'Color','b');
         end
     end
 end
