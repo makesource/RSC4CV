@@ -23,11 +23,13 @@ imshow(I);
 template = rgb2gray(template);
 img = double(img) / 255;
 template = double(template) / 255;
-img = imgaussfilt(img, 3);
-template = imgaussfilt(template, 3);
-imshow(img);
-img = double(edge(img, 'Canny'));
-template = double(edge(template, 'Canny'));
+
+% img = imgaussfilt(img, 3);
+% template = imgaussfilt(template, 3);
+% imshow(img);
+
+img = double(edge(img, 'Canny', [], 3));
+template = double(edge(template, 'Canny', [], 3));
 imshow(img);
 figure;
 imshow(template);
@@ -74,6 +76,4 @@ for i =1:out_r
         end
     end
 end
-
-
 
